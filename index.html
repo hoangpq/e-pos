@@ -2,24 +2,21 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Hello World!</title>
-    <style>
-        body {
-            padding: 0 0;
-            margin: 0 0;
-        }
-    </style>
+    <title>ePos</title>
 </head>
-
 <script>
-    // init data
-    const electron = require('electron');
-    const currentWindow = electron.remote.getCurrentWindow();
-    console.log(currentWindow.products);
-    window.products = currentWindow.products;
+  // init data
+  // const electron = require('electron');
+  // const currentWindow = electron.remote.getCurrentWindow();
+  // console.log(currentWindow.products);
+  // window.products = currentWindow.products;
+  // disable zoom or pinch
+  const {webFrame} = require('electron');
+  webFrame.setZoomLevelLimits(1, 1);
 </script>
 <body>
     <div id="root"></div>
-    <script src="http://localhost:3000/static/bundle.js" type="text/javascript"></script>
+    <!-- <script src="http://localhost:3000/static/bundle.js" type="text/javascript"></script> -->
+    <script src="dist/bundle.js" type="text/javascript"></script>
 </body>
 </html>

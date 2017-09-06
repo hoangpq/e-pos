@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {Component} from 'react';
 import styled from 'styled-components';
 
 // ref: https://scotch.io/tutorials/a-visual-guide-to-css3-flexbox-properties
@@ -7,58 +7,71 @@ const Box = styled.div`
   display: flex;
   flex: 1;
   flex-direction: column;
-  align-items: center;
-  background: grey;
+  background: white;
+  overflow-y: scroll;
 `;
 
-const List = styled.ul`
-  list-style: none;
-  background-color: red;
+const List = styled.div`
   display: flex;
-  flex: 1;
   flex-direction: column;
-  padding: 0 0 0 0;
 `;
 
-const Item = styled.li`
+const Item = styled.div`
   color: #000;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+`;
+
+const Hightlight = styled.span`
+  color: #ef5350;
+`;
+
+const Overlay = styled.div`
+  
 `;
 
 class App extends Component {
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      products: [],
+    };
+  }
+
+  componentDidMount() {
+    fetch(`http://localhost:3000/products`)
+      .then(res => res.json())
+      .then(products => {
+        this.setState({products});
+      });
+  }
+
+  renderListContent() {
+    return this.state.products.map((product, index) => {
+      return (
+        <Item key={index}>
+          {product.name} - <Hightlight>${product.price}</Hightlight>
+        </Item>
+      )
+    });
+  }
+
   renderList() {
     return (
-      <div style={{display: 'flex', flex: '1 0', background: 'red'}}>
-        <List>
-        {
-          this.props.products.map((product, index) => {
-            return (
-              <Item key={index}>
-                <div style={{width: '100%', background: '#dddddd', padding: '10px'}}>
-                  {product.name}
-                </div>
-              </Item>
-            )
-          })
-        }
-        </List>
-      </div>
+      <List>
+        {this.renderListContent()}
+      </List>
     );
   }
 
   render() {
-
     return (
       <Box>
-        <span>Hello Electron</span>
         {this.renderList()}
       </Box>
     )
   }
 }
-
-App.propTypes = {
-  products: PropTypes.array.isRequired,
-};
 
 export default App;
