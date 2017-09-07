@@ -7,7 +7,7 @@ const loadConfig = require('../utils/config');
 const appConfig = loadConfig();
 const pool = new Pool(appConfig.database);
 
-router.get('/products', async(req, res) => {
+router.get('/products', async (req, res) => {
   let products = await pool.query(
     'SELECT name, list_price as price FROM product_template'
   );
