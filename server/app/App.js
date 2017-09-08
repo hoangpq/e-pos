@@ -1,7 +1,8 @@
 import React, {Component} from 'react';
 import styled from 'styled-components';
-import BlockUi from 'react-block-ui';
 import 'react-block-ui/style.css';
+import ProductDetail from './components/ProductDetail';
+import gfetch from '../utils/graphql-dsl';
 
 // ref: https://scotch.io/tutorials/a-visual-guide-to-css3-flexbox-properties
 const Hightlight = styled.span`
@@ -24,16 +25,6 @@ const Wrapper = styled.div`
   border-right: none;
 `;
 
-const ProductDetail = styled.div`
-  display: flex;
-  flex: 0.5;
-  margin-top: 10px;
-  align-item: center;
-  justify-content: center;
-  border: 1px solid red;
-`;
-
-
 class App extends Component {
 
   constructor(props) {
@@ -44,22 +35,27 @@ class App extends Component {
     };
   }
 
+  getProducts() {
+    return gfetch(`
+      query {
+        products {
+          name
+          price
+        }
+      }
+    `);
+  }
+
   componentDidMount() {
     this.setState({
       blocking: true,
     });
-    fetch(`http://localhost:3000/products`)
-      .then(res => res.json())
-      .then(products => {
-        this.setState({
-          products,
-        });
-        setTimeout(() => {
-          this.setState({
-            blocking: false,
-          })
-        }, 3000);
+
+    this.getProducts().then(res => {
+      this.setState({
+        products: res.data.products,
       });
+    });
   }
 
   renderListContent() {
@@ -67,7 +63,7 @@ class App extends Component {
       return (
         <tr key={index}>
           <td>
-            <Item>
+            <Item onClick={() => alert('wtf')}>
               {product.name} - <Hightlight>${product.price}</Hightlight>
             </Item>
           </td>
@@ -92,9 +88,7 @@ class App extends Component {
     return (
       <div style={{display: 'flex', flex: 1}}>
         {this.renderList()}
-        <ProductDetail>
-          <span>Product detail</span>
-        </ProductDetail>
+        <ProductDetail/>
       </div>
     )
   }

@@ -1,0 +1,12 @@
+type Product {
+    name: String
+    price: Float
+}
+
+type Query {
+    products(name: String!): [Product]
+}
+
+schema {
+    query: Query
+}

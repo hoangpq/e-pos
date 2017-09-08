@@ -41,7 +41,16 @@ module.exports = (port) => {
               loader: 'css-loader',
             }
           ]
-        }
+        },
+        {
+          test: /\.(png|jpg)$/,
+          use: [
+            {
+              loader: 'file-loader',
+              options: {},
+            }
+          ]
+        },
       ]
     },
     plugins: [
