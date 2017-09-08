@@ -4,7 +4,7 @@ type Product {
 }
 
 type Query {
-    products(name: String!): [Product]
+    products(name: String): [Product]
 }
 
 schema {
