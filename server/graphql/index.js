@@ -153,8 +153,6 @@ graphQlRouter.post('/graphql', graphqlHTTP({
   schema: schema,
 }));
 
-graphQlRouter.get('/graphqli', graphiqlExpress({
-  endpointURL: '/api/graphql'
-}));
-
+const handler = graphiqlExpress({endpointURL: 'http://localhost:8080/graphql'});
+graphQlRouter.get('/graphqli', handler);
 module.exports = graphQlRouter;
