@@ -13,7 +13,8 @@
     "postinstall": "electron-builder install-app-deps",
     "electron:build": "rm -rf ePos-darwin-x64 && electron-packager . --asar=true --prune=true --platform=darwin --arch=x64 --version=0.34.3 --ignore=experiments --ignore='node_modules/(electron-packager|electron-prebuilt|standard|publish-release)' --version-string.ProductName=ePos --icon=Icon.icns",
     "electron:zip": "cd ePos-darwin-x64 && zip -ryX ePos-darwin-x64.zip ePos.app",
-    "build": "yarn run electron:build && yarn run electron:zip"
+    "build": "yarn run electron:build && yarn run electron:zip",
+    "reload": "nodemon server/server.js"
   },
   "build": {
     "appId": "com.hoangpq.epos",
@@ -28,7 +29,10 @@
     "express-graphql": "^0.6.11",
     "graphql": "^0.11.3",
     "graphql-server-express": "^1.1.2",
+    "graphql-subscriptions": "^0.4.4",
+    "graphql-tools": "^1.2.2",
     "js-yaml": "^3.9.1",
+    "lodash": "^4.17.4",
     "pg": "^7.3.0",
     "prop-types": "^15.5.10",
     "react": "^15.6.1",

@@ -36,14 +36,26 @@ class App extends Component {
   }
 
   getProducts() {
+    const variables = {
+      price1: 3000,
+      price2: 40000,
+      moreProduct: false,
+    };
     return gfetch(`
-      query {
-        products {
-          name
-          price
+      query ProductData($price1: Float, $price2: Float, $moreProduct: Boolean!) {
+        greatThan1000: products(price: $price1) {
+          ...productField
+        }
+        greatThan40000: products(price: $price2) @include(if: $moreProduct) {
+          ...productField
         }
       }
-    `);
+      # fragments
+      fragment productField on Product {
+        name
+        price
+      }
+    `, variables);
   }
 
   componentDidMount() {
@@ -52,9 +64,9 @@ class App extends Component {
     });
 
     this.getProducts().then(res => {
-      this.setState({
-        products: res.data.products,
-      });
+      const products = [].concat(res.data.greatThan1000 || [], res.data.greatThan40000 || []);
+      console.log(products);
+      this.setState({products});
     });
   }
 
@@ -63,7 +75,7 @@ class App extends Component {
       return (
         <tr key={index}>
           <td>
-            <Item onClick={() => alert('wtf')}>
+            <Item onClick={() => alert(product.name)}>
               {product.name} - <Hightlight>${product.price}</Hightlight>
             </Item>
           </td>

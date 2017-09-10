@@ -1,0 +1,8 @@
+{
+  "verbose": true,
+  "ignore": ["server/app/*.js", "server/config/*.yaml"],
+  "execMap": {
+    "rb": "ruby",
+    "pde": "processing --sketch={{pwd}} --run"
+  }
+}

@@ -1,12 +1,63 @@
-type Product {
-    name: String
-    price: Float
+enum Vat {
+    UK
+    US
 }
 
+type Uom {
+    id: ID,
+    name: String
+}
+
+type Product {
+    name: String
+    price(vat: Boolean): Float
+    type: String
+    uom: Uom
+}
+
+type Template {
+    template_name: String
+    price: Float
+    type: String
+}
+
+interface Character {
+    name: String!
+}
+
+type Human implements Character {
+    name: String!
+    starship: String
+}
+
+type Droid implements Character {
+    name: String!
+    primaryFunction: String
+}
+
+type Result {
+    id: String
+}
+
+type Subscription {
+    somethingChanged: Result
+}
+
+union SearchResult = Product | Template
+
 type Query {
-    products(name: String): [Product]
+    products(name: String, price: Float): [SearchResult]
+    product(id: ID!): SearchResult,
+    randomProduct: [SearchResult]
+    randomChacrater: [Character]
+}
+
+type Mutation {
+    createProduct(name: String, price: Float): Product
 }
 
 schema {
-    query: Query
+    query: Query,
+    mutation: Mutation
+    subscription: Subscription
 }
