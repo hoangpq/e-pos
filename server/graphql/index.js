@@ -3,115 +3,88 @@ const path = require('path');
 const express = require('express');
 const graphqlHTTP = require('express-graphql');
 const graphQlRouter = express.Router();
-// const {buildSchema} = require('graphql');
-const graphqlTools = require('graphql-tools');
-const {graphiqlExpress} = require('graphql-server-express');
 const {loadProducts, getProduct, getUom} = require('../api/odoo');
-const SOMETHING_CHANGED_TOPIC = 'something_changed';
 const {
   GraphQLSchema,
   GraphQLString,
   GraphQLFloat,
   GraphQLList,
-  GraphQLObjectType
+  GraphQLID,
+  GraphQLObjectType,
+  GraphQLInterfaceType,
 } = require('graphql');
 
-const Schema = fs.readFileSync(path.join(__dirname, './schema.graphqls')).toString();
+// const Schema = fs.readFileSync(path.join(__dirname, './schema.graphqls')).toString();
 
-const createProduct = function ({name, price}) {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve({
-        name: `${name} - 2017`,
-        price: ({vat = false}) => vat ? 1.5 * price : price,
-      });
-    }, 1000)
-  })
-};
 
-const randomProduct = function () {
-  return [1, 2, 3, 4].map((n) => {
-    if (n % 2 === 0) {
-      return {
-        template_name: 'Template',
-      }
-    } else {
-      return {
-        name: 'Product',
-        price: 10 * n,
-      }
-    }
-  });
-};
-
-const randomChacrater = function () {
-  const characters = [];
-  characters.push({
-    name: 'Jedi',
-    starship: 'TIE Advanced x1',
-  });
-  characters.push({
-    name: 'R2-D2',
-    primaryFunction: 'Astromech',
-  });
-  return characters;
-};
-
-const resolverMap = {
-  SearchResult: {
-    __resolveType(obj, context, info) {
-      if (obj.template_name) {
-        return 'Template';
-      }
-      if (obj.price) {
-        return 'Product';
-      }
-      return null;
+// Character
+const characterInterface = new GraphQLInterfaceType({
+  name: 'Character',
+  fields: {
+    name: {
+      type: GraphQLString,
     },
   },
-  Character: {
-    __resolveType(obj, context, info) {
-      if (obj.starship) {
-        return 'Human';
-      }
-      if (obj.primaryFunction) {
-        return 'Droid';
-      }
-      return null;
+  resolveType(obj, context, info) {
+    if (obj.starship) {
+      return 'Human';
     }
-  },
-  Query: {
-    products(obj, {name, price}, context) {
-      return loadProducts(name, price);
-    },
-  },
-  Product: {
-    name(obj) {
-      return obj.name;
-    },
-    uom(obj) {
-      return getUom(obj.uom_id);
+    if (obj.primaryFunction) {
+      return 'Droid';
     }
-  },
-  Subscription: {
-    somethingChanged: {
-      subscribe: () => pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC),
+    return null;
+  }
+});
+
+// Human
+const humanType = new GraphQLObjectType({
+  name: 'Human',
+  interfaces: [characterInterface],
+  fields: {
+    name: {
+      type: GraphQLString,
+      description: 'The human name',
+    },
+    starship: {
+      type: GraphQLString,
+      description: 'The human\'s starship',
     },
   }
-};
+});
 
-const root = {
-  // queries
-  // products: ({name, price}) => loadProducts(name, price),
-  product: ({id}) => getProduct(id),
-  // mutations
-  createProduct: createProduct,
-  randomProduct: randomProduct,
-  randomChacrater: randomChacrater,
-};
+// Droid
+const droidType = new GraphQLObjectType({
+  name: 'Droid',
+  interfaces: [characterInterface],
+  fields: {
+    name: {
+      type: GraphQLString,
+      description: 'The droid name',
+    },
+    primaryFunction: {
+      type: GraphQLString,
+      description: 'The droid primary function',
+    },
+  }
+});
 
-// const schema = buildSchema(Schema);
+// UOM
+const uomType = new GraphQLObjectType({
+  name: 'Uom',
+  description: 'Odoo product uom',
+  fields: {
+    id: {
+      type: GraphQLID,
+      description: 'Product uom id',
+    },
+    name: {
+      type: GraphQLString,
+      description: 'Product uom name',
+    },
+  }
+});
 
+// Product
 const productType = new GraphQLObjectType({
   name: 'Product',
   description: 'Odoo product',
@@ -119,14 +92,23 @@ const productType = new GraphQLObjectType({
     name: {
       type: GraphQLString,
       description: 'The product name',
+      resolve: (obj, params, context) => {
+        return obj.name;
+      },
     },
     price: {
       type: GraphQLFloat,
       description: 'The product price',
+    },
+    uom: {
+      type: uomType,
+      description: 'The product uom',
+      resolve: (obj) => getUom(obj.uom_id),
     }
   }
 });
 
+// Query
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
   description: 'The root of query type',
@@ -135,24 +117,50 @@ const queryType = new GraphQLObjectType({
       type: new GraphQLList(productType),
       description: 'List of products',
       resolve: () => loadProducts(),
+    },
+    product: {
+      type: productType,
+      description: 'Get single product',
+      resolve: ({id}) => getProduct(id),
+    },
+    characters: {
+      type: new GraphQLList(characterInterface),
+      description: 'List of character',
+      resolve: () => {
+        return new Promise((resolve) => {
+          const characters = [
+            {
+              name: 'Jedi',
+              starship: 'TIE Advanced x1',
+            }, {
+              name: 'R2-D2',
+              primaryFunction: 'Astromech',
+            }
+          ];
+          resolve(characters);
+        })
+      },
     }
   },
 });
 
 const schema = new GraphQLSchema({
   query: queryType,
+  types: [
+    productType,
+    humanType,
+    droidType,
+  ],
 });
 
 graphQlRouter.post('/graphql', graphqlHTTP({
-  // The old way to invoke scheme
-  /*schema: graphqlTools.makeExecutableSchema({
-    typeDefs: Schema,
-    resolvers: resolverMap,
-  }),
-  rootValue: root,*/
   schema: schema,
+  graphiql: false,
 }));
 
-const handler = graphiqlExpress({endpointURL: 'http://localhost:8080/graphql'});
-graphQlRouter.get('/graphqli', handler);
+graphQlRouter.get('/graphql', graphqlHTTP({
+  schema: schema,
+  graphiql: true,
+}));
+
 module.exports = graphQlRouter;

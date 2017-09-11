@@ -1,6 +1,6 @@
 database:
-  user: odoo
-  host: localhost
-  database: odoo-10
-  password: odoo
+  user: 'odoo'
+  host: 'localhost'
+  database: 'odoo10'
+  password: 'odoo'
   port: 5432
