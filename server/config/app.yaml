@@ -1,6 +1,6 @@
 database:
   user: 'odoo'
   host: 'localhost'
-  database: 'odoo10'
+  database: 'odoo-10'
   password: 'odoo'
   port: 5432

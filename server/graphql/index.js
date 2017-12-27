@@ -11,6 +11,7 @@ const {
   GraphQLList,
   GraphQLID,
   GraphQLObjectType,
+  GraphQLNonNull,
   GraphQLInterfaceType,
 } = require('graphql');
 
@@ -116,7 +117,17 @@ const queryType = new GraphQLObjectType({
     products: {
       type: new GraphQLList(productType),
       description: 'List of products',
-      resolve: () => loadProducts(),
+      args: {
+        price: {
+          name: 'Price of the product',
+          type: GraphQLFloat,
+        },
+        name: {
+          name: 'Name of the product',
+          type: GraphQLString,
+        },
+      },
+      resolve: (obj, { name, price }, context) => loadProducts(name, price),
     },
     product: {
       type: productType,

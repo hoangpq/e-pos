@@ -15,7 +15,8 @@ exports.loadProducts = function (name, price) {
     ],
     domain: domain,
   })
-    .then(result => result.rows);
+    .then(result => result.rows)
+    .then(result => { console.log(result); return result; })
 };
 
 exports.getProduct = function (id) {
