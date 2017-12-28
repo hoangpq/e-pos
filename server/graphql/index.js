@@ -1,9 +1,11 @@
-const fs = require('fs');
-const path = require('path');
 const express = require('express');
+const withFilter = require('graphql-subscriptions').withFilter;
+const graphiqlExpress = require('graphql-server-express').graphiqlExpress;
 const graphqlHTTP = require('express-graphql');
+const PubSub = require('graphql-subscriptions').PubSub;
 const graphQlRouter = express.Router();
 const {loadProducts, getProduct, getUom} = require('../api/odoo');
+
 const {
   GraphQLSchema,
   GraphQLString,
@@ -11,13 +13,11 @@ const {
   GraphQLList,
   GraphQLID,
   GraphQLObjectType,
-  GraphQLNonNull,
   GraphQLInterfaceType,
 } = require('graphql');
 
 // const Schema = fs.readFileSync(path.join(__dirname, './schema.graphqls')).toString();
-
-
+const pubsub = new PubSub();
 // Character
 const characterInterface = new GraphQLInterfaceType({
   name: 'Character',
@@ -127,7 +127,7 @@ const queryType = new GraphQLObjectType({
           type: GraphQLString,
         },
       },
-      resolve: (obj, { name, price }, context) => loadProducts(name, price),
+      resolve: (obj, {name, price}, context) => loadProducts(name, price),
     },
     product: {
       type: productType,
@@ -155,8 +155,23 @@ const queryType = new GraphQLObjectType({
   },
 });
 
+const iterator = pubsub.asyncIterator('FIRST_EVENT');
+const subscriptionType = new GraphQLObjectType({
+  name: 'Subscription',
+  fields: {
+    name: {
+      type: GraphQLString,
+      subscribe: withFilter(() => iterator, () => true),
+      resolve: root => {
+        return 'FIRST_EVENT';
+      },
+    }
+  }
+});
+
 const schema = new GraphQLSchema({
   query: queryType,
+  subscription: subscriptionType,
   types: [
     productType,
     humanType,
@@ -169,9 +184,17 @@ graphQlRouter.post('/graphql', graphqlHTTP({
   graphiql: false,
 }));
 
-graphQlRouter.get('/graphql', graphqlHTTP({
+/*graphQlRouter.get('/graphql', graphqlHTTP({
   schema: schema,
   graphiql: true,
+}));*/
+
+graphQlRouter.use('/graphiql', graphiqlExpress({
+  endpointURL: '/api/graphql',
+  // subscriptionsEndpoint: `ws://localhost:3000/subscriptions`,
 }));
 
-module.exports = graphQlRouter;
+module.exports = {
+  graphQlRouter,
+  schema,
+};

@@ -1,9 +1,9 @@
 // for react hot reload
 const webpack = require('webpack');
 const express = require('express');
-const graphQlRouter = require('./graphql');
-const {pubsub} = require('./pubsub');
-const SOMETHING_CHANGED_TOPIC = 'something_changed';
+const { graphQlRouter, schema } = require('./graphql');
+const SubscriptionServer = require('subscriptions-transport-ws').SubscriptionServer;
+const {execute, subscribe} = require('graphql');
 const {query} = require('./utils/orm');
 
 const PORT = process.env.PORT || 3000;
@@ -42,10 +42,5 @@ app.use('/api', graphQlRouter);
       return console.error(err);
     }
     console.log(`Listening on port ${PORT}`);
-
-    setInterval(() => {
-      pubsub.publish(SOMETHING_CHANGED_TOPIC, {somethingChanged: {id: "123"}});
-    }, 1000);
-
   });
 })();
